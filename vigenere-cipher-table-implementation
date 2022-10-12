@@ -1,0 +1,58 @@
+from typing import List
+import pandas as pd
+class VigenereCipherTable():
+    global alphabets
+    alphabets = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    cipherTable = []
+    def __init__(self):
+        self.fillCipherTable()
+        self.getOperation()
+
+    
+    def fillCipherTable(self):
+        global cipherTable
+        cipherTable = [alphabets[i:] + alphabets[0:i] for i in range(len(alphabets))]
+        cipherTable = pd.DataFrame(cipherTable)
+    
+    def getMessageAndKey(self, mode: str) -> List[str]:
+        message = input("Enter message to be "+ mode + " : ")
+        while True:
+            cipherKey = input("Enter Cipher Key :")
+            if(not len(cipherKey)<=0 or not len(cipherKey)>3):
+                if not len(message) == len(cipherKey):
+                    for i in range(len(message)-len(cipherKey)):
+                        cipherKey += cipherKey[i%len(cipherKey)]
+                return [message, cipherKey]
+    
+    def encrypt(self):
+        encryptedText = ''
+        inputParams = self.getMessageAndKey('encrypted')
+        message, cipherKey = inputParams[0], inputParams[1]
+        for i in range(len(message)):
+            encryptedText += cipherTable[alphabets.index(message[i])][alphabets.index(cipherKey[i])]
+        print(encryptedText)
+
+    def decrypt(self):
+        decryptedText = ''
+        inputParams = self.getMessageAndKey('decrypted')
+        message, cipherKey = inputParams[0], inputParams[1]
+        for i in range(len(message)):
+            cipherKeyColumn = cipherTable[alphabets.index(cipherKey[i])].to_list()
+            decryptedText += alphabets[cipherKeyColumn.index(message[i])]
+        print(decryptedText)
+
+
+    global operationDict
+    operationDict = {
+        'encrypt': encrypt,
+        'decrypt': decrypt
+    }
+    
+    def getOperation(self):
+        while True:
+            operation = input("Enter \"encrypt\" or \"decrypt\" : ").lower()
+            if operation == 'encrypt' or operation == 'decrypt':
+                flag = False
+                return operationDict[operation](self)
+
+VigenereCipherTable()
