@@ -70,3 +70,4 @@ class CaesarsCipher:
             if operation == 'encrypt' or operation == 'decrypt':
                 flag = False
                 return operationDict[operation](self)
+CaesarsCipher()
