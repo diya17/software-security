@@ -65,7 +65,7 @@ class StatisticalAttackOnCaesarsCipher:
         for i in range(25):
             phiI = 0
             for char in cipherText:
-                phiI += freqOfCipherChar[char]*charFrequency[list(charFrequency.keys())[((list(charFrequency.keys()).index(char))-i)]]
+                phiI += freqOfCipherChar[char]*charFrequency[list(charFrequency.keys())[((list(charFrequency.keys()).index(char.upper()))-i)]]
                 keyDecryptText[i] = [phiI, self.decrypt(cipherText, i)]
         print("\n" + "-"*30)
         print(" \n The decrypted keys for " + cipherText + " are : \n")
