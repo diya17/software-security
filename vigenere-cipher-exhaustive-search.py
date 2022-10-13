@@ -1,5 +1,6 @@
 import collections
 import string
+from itertools import product
 
 
 class VigenereCipherExhaustiveSearch():
@@ -54,39 +55,13 @@ class VigenereCipherExhaustiveSearch():
                 periodNotFound = False
         return periods
 
-
-    def findKeyOfLengthOne(self, plainText, cipherText):
-        key = ''
-        keys = []
-        for key in list(string.ascii_uppercase):
+    def findKeyOfPeriodLength(self, plainText, cipherText, period):
+        combinations = [''.join(i) for i in product(string.ascii_uppercase, repeat = period)]
+        for key in combinations:
             plaintextByKey = self.decrypt(cipherText,key)
-            keys.append(key)
             if plaintextByKey == plainText:
-                return key, keys
-        return '', keys
-
-    def findKeyOfLengthTwo(self, plainText, cipherText):
-        keys = ['']*2
-        for keys[0] in list(string.ascii_uppercase):
-            for keys[1] in list(string.ascii_uppercase):
-                key = "".join(keys[0]+keys[1])
-                plaintextByKey = self.decrypt(cipherText,key)
-                keys.append(key)
-                if plaintextByKey == plainText:
-                    return key, keys
-        return '', keys
-
-    def findKeyOfLengthThree(self, plainText, cipherText):
-        keys = ['']*3
-        for keys[0] in list(string.ascii_uppercase):
-            for keys[1] in list(string.ascii_uppercase):
-                for keys[2] in list(string.ascii_uppercase):
-                    key = "".join(keys[0]+keys[1]+keys[2])
-                    plaintextByKey = self.decrypt(cipherText,key)
-                    keys.append(key)
-                    if plaintextByKey == plainText:
-                        return key, keys
-        return '', keys
+                return key, combinations[0:combinations.index(key)+1]
+        return '', combinations
     
     def findKey(self, plainText, cipherText, keyNo):
         with open("cipherKeyVigenere" + str(keyNo) +".txt","w") as file:
@@ -94,12 +69,7 @@ class VigenereCipherExhaustiveSearch():
             key = ''
             keys = []
             for period in periods:
-                if period == 1:
-                    key, keys = self.findKeyOfLengthOne(plainText, cipherText)
-                elif period == 2:
-                    key, keys = self.findKeyOfLengthTwo(plainText, cipherText)
-                else:
-                    key, keys = self.findKeyOfLengthThree(plainText, cipherText)
+                key, keys = self.findKeyOfPeriodLength(plainText, cipherText, period)
                 file.write("*"*80 + "\n")
                 file.write("The plain text is " + plainText + "\n")
                 file.write("The plain text is " + cipherText + "\n")
@@ -112,7 +82,7 @@ class VigenereCipherExhaustiveSearch():
                 file.write("-"*80 + "\n")
                 file.write("*"*80 + "\n")
 
-n = int(input("Enter number of keys to be found"))
+n = int(input("Enter number of keys to be found : "))
 keysToBeFoundList = []
 for i in range(n):
     plainText = input("Enter plain text ")
