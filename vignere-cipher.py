@@ -20,7 +20,12 @@ class VigenereCipher():
         inputParams = self.getMessageAndKey('encrypted')
         message, cipherKey = inputParams[0], inputParams[1]
         for i in range(len(message)):
-            cipherChar = chr(((ord(message[i]) + ord(cipherKey[i])) % 26) + ord('A'))
+            cipherVal = ord(message[i]) + ord(cipherKey[i])
+            if cipherVal > 126:
+                cipherVal -= 95
+            elif cipherVal < 32:
+                cipherVal += 95
+            cipherChar = chr(cipherVal)
             encryptedText += cipherChar
         print(encryptedText)
 
@@ -29,7 +34,12 @@ class VigenereCipher():
         inputParams = self.getMessageAndKey('decryption')
         message, cipherKey = inputParams[0], inputParams[1]
         for i in range(len(message)):
-            decryptedChar = chr((((ord(message[i]) - ord(cipherKey[i])) + 26) % 26) + ord('A'))
+            cipherVal = ord(message[i]) - ord(cipherKey[i])
+            if cipherVal > 126:
+                cipherVal -= 95
+            elif cipherVal < 32:
+                cipherVal += 95
+            decryptedChar = chr(cipherVal)
             decryptedText += decryptedChar
         print(decryptedText)
 
