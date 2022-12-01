@@ -12,6 +12,7 @@ def parse_sysdig_events(filePath):
         pID = log.split('proc_pid =', 1)[1].split()[0]
         processType = log.split()[6]
         fileID = log.split('file_id=', 1)[1].split()[0]
+        eventType = log.split()[5]
         fdCIP, fdSIP, fdCPort, fdSPort, fdL4Protocol, fdFileName, parsedLogTuple = None, None, None, None, None, None, None
         if 'fd_cip' in log:
             fdCIP = log.split('fd_cip=', 1)[1].split()[0]
@@ -22,14 +23,19 @@ def parse_sysdig_events(filePath):
         else:
             fdFileName = log.split('fd_filename=', 1)[1].split()[0]
         # Tuple structure:
-        # for tcp/udp connections - ((processID, processName), (processType), (fileID, file client IP, file server IP, file client port, file server port, file access protocol))
-        # for normal file access - ((processID, processName), (processType), (fileID, fileName))
+        # for tcp/udp connections - ((processID, processName), (processType, eventType), (fileID, file client IP, file server IP, file client port, file server port, file access protocol))
+        # for normal file access - ((processID, processName), (processType, eventType), (fileID, fileName))
         if fdCIP and fdSIP and fdCPort and fdSPort and fdL4Protocol:
-            parsedLogTuple = ((pID, processName), (processType), (fileID, fdCIP, fdSIP, fdCPort, fdSPort, fdL4Protocol))
+            parsedLogTuple = ((pID, processName), (processType, eventType), (fileID, fdCIP, fdSIP, fdCPort, fdSPort, fdL4Protocol))
         else:
-            parsedLogTuple = ((pID, processName), (processType), (fileID, fdFileName))
+            parsedLogTuple = ((pID, processName), (processType, eventType), (fileID, fdFileName))
         parsedLogTuples.append(parsedLogTuple)
     print(parsedLogTuples)
+    return parsedLogTuples
     
+def create_graphs_from_tuples(logTuples):
+    print(logTuples)
 
-parse_sysdig_events('/Users/diyabiju/Downloads/sysdig_28_11_2022_3_4_1.txt')
+#parsedLogTuples = parse_sysdig_events('/home/diyabiju/sysdig_28_11_2022_3_4_1.txt')
+parsedLogTuples = parse_sysdig_events('/Users/diyabiju/Downloads/sysdig_28_11_2022_3_4_1.txt')
+graph = create_graphs_from_tuples(parsedLogTuples)
