@@ -32,10 +32,8 @@ def parse_sysdig_events(filePath):
         else:
             parsedLogTuple = ((pID, processName), (processType, eventType), (fileID, fdFileName))
         parsedLogTuples.append(parsedLogTuple)
-
     return parsedLogTuples
     
-
 # graph edges -> file id 
 # edge weights calculation - use the iterator value i - if < start time = i else if > end time = i, final edge weight -[start time, end time]
 def create_graphs_from_tuples(logTuples):
@@ -115,7 +113,7 @@ def backtrackPointOfInterest(graphFilePath, parentNode, childNode, logsGraph):
 
     
 
-
+#parsedLogTuples = parse_sysdig_events('/home/diyabiju/sysdig_28_11_2022_3_4_1.txt')
 parsedLogs = parse_sysdig_events('/Users/diyabiju/Downloads/sysdig_28_11_2022_3_4_1.txt')
 logsGraph = create_graphs_from_tuples(parsedLogs)
 backtrackPointOfInterest('logsTestGraph.svg', '1586 gnome-shell', '143 current', logsGraph)
