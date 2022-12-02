@@ -1,9 +1,8 @@
 import pygraphviz as pgv
 from ast import literal_eval
 # Getting log files using sysdig 
-# To get tcp, udp events - sudo sysdig -p "%evt.num %evt.rawtime.s.%evt.rawtime.ns %evt.cpu %proc.name (%proc.pid) %evt.dir %evt.type cwd=%proc.cwd %evt.args latency=%evt.latency exepath=%proc.exepath proc_pid =%proc.pid file_id=%fd.num  fd_name=%fd.name  fd_cip=%fd.cip fd_sip=%fd.sip fd_lip=%fd.lip fd_rip=%fd.rip fd_cport=%fd.cport fd_sport=%fd.sport fd_lport=%fd.lport fd_rport=%fd.rport fd_l4protocol= %fd.l4proto " "proc.name!=tmux and (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=fcntl or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)" and proc.name!=sysdig > sysdig_28_11_2022_3_4_1.txt
-# To get file access events - sudo sysdig -p "%evt.num %evt.rawtime.s.%evt.rawtime.ns %evt.cpu %proc.name (%proc.pid) %evt.dir %evt.type cwd=%proc.cwd %evt.args latency=%evt.latency exepath=%proc.exepath proc_pid =%proc.pid file_id=%fd.num  fd_name=%fd.name  fd_filename=%fd.filename" "proc.name!=tmux and (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=fcntl or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)" and proc.name!=sysdig > sysdig_28_11_2022_3_4_2.txt
-# cat sysdig_28_11_2022_3_4_2.txt >> sysdig_28_11_2022_3_4_1.txt
+# To get tcp, udp events - sudo sysdig -p "%evt.num %evt.rawtime.s.%evt.rawtime.ns %evt.cpu %proc.name (%proc.pid) %evt.dir %evt.type cwd=%proc.cwd %evt.args latency=%evt.latency exepath=%proc.exepath proc_pid =%proc.pid file_id=%fd.num  fd_name=%fd.name  fd_cip=%fd.cip fd_sip=%fd.sip fd_lip=%fd.lip fd_rip=%fd.rip fd_cport=%fd.cport fd_sport=%fd.sport fd_lport=%fd.lport fd_rport=%fd.rport fd_l4protocol= %fd.l4proto " "proc.name!=tmux and (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)" and proc.name!=sysdig > sysdig_28_11_2022_3_4_1.txt
+# To get file access events - sudo sysdig -p "%evt.num %evt.rawtime.s.%evt.rawtime.ns %evt.cpu %proc.name (%proc.pid) %evt.dir %evt.type cwd=%proc.cwd %evt.args latency=%evt.latency exepath=%proc.exepath proc_pid =%proc.pid file_id=%fd.num  fd_name=%fd.name  fd_filename=%fd.filename" "proc.name!=tmux and (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)" and proc.name!=sysdig > sysdig_28_11_2022_3_4_2.txt
 def parse_sysdig_events(filePath):
     logsList = []
     parsedLogTuples = []
@@ -51,7 +50,7 @@ def create_graphs_from_tuples(logTuples):
         if len(logTuple[2]) == 2:
             fileName = logTuple[2][1]
         node2 = str(logTuple[2][0]) + ' ' + fileName if len(fileName) > 0 else str(logTuple[2][0])
-        # Event types (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=fcntl or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)
+        # Event types (evt.type=read or evt.type=readv or evt.type=write or evt.type=writev or evt.type=accept or evt.type=execve or evt.type=clone or evt.type=pipe or evt.type=rename or evt.type=sendmsg or evt.type=recvmsg)
         if logTuple[1][0] in ['read', 'readv', 'execve', 'sendmsg', 'accept']:
             parentNode = node2
             childNode  = node1
@@ -61,7 +60,7 @@ def create_graphs_from_tuples(logTuples):
         if logsGraph.has_edge(parentNode, childNode):
             edge = logsGraph.get_edge(parentNode, childNode)
             weight = literal_eval(edge.attr['label'])
-            if len(weight) == 1 and logTuple[1][1] == '<':
+            if len(weight) == 2 and logTuple[1][1] == '<':
                 weight.append(iterator)
                 edge.attr['label'] = weight
         else:
@@ -70,7 +69,7 @@ def create_graphs_from_tuples(logTuples):
             logsGraph.add_edge(parentNode, childNode)
             edge = logsGraph.get_edge(parentNode, childNode)
             if logTuple[1][1] == '>':
-                edge.attr['label'] = [iterator]
+                edge.attr['label'] = [logTuple[1][0], iterator]
     logsGraph.layout(prog="dot")
     logsGraph.draw("logsTestGraph.svg")
     return logsGraph
@@ -88,7 +87,7 @@ def backtrack(parentNode, childNode, visited, maxEndTime, backtrackGraph, logsGr
     if len(logsGraph.in_edges(parentNode)) == 0:
         return
     for incomingEdge in logsGraph.in_edges(parentNode):
-        if  literal_eval(incomingEdge.attr['label'])[0] < int(maxEndTime):
+        if  literal_eval(incomingEdge.attr['label'])[1] < int(maxEndTime):
             backtrack(logsGraph.get_node(incomingEdge[0]), parentNode, visited, maxEndTime, backtrackGraph, logsGraph)
 
 
@@ -106,16 +105,13 @@ def backtrackPointOfInterest(graphFilePath, parentNode, childNode, logsGraph):
     if logsGraph.has_edge(parentNode, childNode):
         edge = logsGraph.get_edge(parentNode, childNode)
         weight = literal_eval(edge.attr['label'])
-        maxEndTime = weight[1]
+        maxEndTime = weight[2]
         backtrack(parentNode, childNode, visited, maxEndTime, backtrackGraph, logsGraph)
         backtrackGraph.layout(prog="dot")
         backtrackGraph.draw("BackTrackGraph.svg")
     else:
         print("Point of interest not present in the graph")
 
-    
-
-#parsedLogTuples = parse_sysdig_events('/home/diyabiju/sysdig_28_11_2022_3_4_1.txt')
-parsedLogs = parse_sysdig_events('/Users/diyabiju/Downloads/sysdig_28_11_2022_3_4_1.txt')
+parsedLogs = parse_sysdig_events('sysdig_1_12_2022_3_4_2rand.txt')
 logsGraph = create_graphs_from_tuples(parsedLogs)
-backtrackPointOfInterest('logsTestGraph.svg', '1586 gnome-shell', '143 current', logsGraph)
+backtrackPointOfInterest('logsTestGraph.svg', '13149 sh', '1 shfile.sh', logsGraph)
