@@ -32,7 +32,7 @@ def parse_sysdig_events(filePath):
         else:
             parsedLogTuple = ((pID, processName), (processType, eventType), (fileID, fdFileName))
         parsedLogTuples.append(parsedLogTuple)
-        print(parsedLogTuples)
+    print(parsedLogTuples)
     return parsedLogTuples
     
 # graph edges -> file id 
@@ -59,10 +59,11 @@ def create_graphs_from_tuples(logTuples):
             childNode  = node2
         if logsGraph.has_edge(parentNode, childNode):
             edge = logsGraph.get_edge(parentNode, childNode)
-            weight = literal_eval(edge.attr['label'])
-            if len(weight) == 2 and logTuple[1][1] == '<':
-                weight.append(iterator)
-                edge.attr['label'] = weight
+            if edge.attr['label']:
+                weight = literal_eval(edge.attr['label'])
+                if len(weight) == 2 and logTuple[1][1] == '<':
+                    weight.append(iterator)
+                    edge.attr['label'] = weight
         else:
             logsGraph.add_node(parentNode)
             logsGraph.add_node(childNode)
@@ -112,6 +113,8 @@ def backtrackPointOfInterest(graphFilePath, parentNode, childNode, logsGraph):
     else:
         print("Point of interest not present in the graph")
 
+
+#parsedLogTuples = parse_sysdig_events('/home/diyabiju/sysdig_28_11_2022_3_4_1.txt')
 parsedLogs = parse_sysdig_events('sysdig_1_12_2022_3_4_2rand.txt')
 logsGraph = create_graphs_from_tuples(parsedLogs)
-backtrackPointOfInterest('logsTestGraph.svg', '13149 sh', '1 shfile.sh', logsGraph)
+backtrackPointOfInterest('logsTestGraph.svg', '17840 sh', '1 shfile.sh', logsGraph)
